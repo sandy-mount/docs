@@ -145,6 +145,13 @@ const sidebars: SidebarsConfig = {
             'projects/wikifreedia/index',
             'projects/freerse/index',
             'projects/blowater/index',
+            'projects/nostr-nests/index',
+            'projects/badges-page/index',
+            'projects/stacker-news/index',
+            'projects/zapddit/index',
+            'projects/pinstr/index',
+            'projects/oddbean/index',
+            'projects/coop/index',
           ],
         },
         {

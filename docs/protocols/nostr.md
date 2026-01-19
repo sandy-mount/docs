@@ -20,37 +20,65 @@ Everything in Nostr is an event — a signed JSON object:
   "pubkey": "npub1...",
   "created_at": 1234567890,
   "kind": 1,
-  "tags": [],
+  "tags": [
+    ["e", "reply-to-event-id"],
+    ["p", "mentioned-pubkey"],
+    ["t", "bitcoin"]
+  ],
   "content": "Hello, Nostr!",
   "sig": "signature..."
 }
 ```
 
 Key properties:
-- **id** — SHA256 hash of the event
-- **pubkey** — Author's public key
-- **sig** — Schnorr signature proving authorship
-- **kind** — Event type (1 = text note, 0 = profile, etc.)
+
+| Field | Description |
+|-------|-------------|
+| **id** | SHA256 hash of the serialized event |
+| **pubkey** | Author's public key (hex) |
+| **created_at** | Unix timestamp |
+| **kind** | Event type (determines meaning) |
+| **tags** | Array of arrays for metadata |
+| **content** | Event payload |
+| **sig** | Schnorr signature (secp256k1) |
 
 ### Keys
 
 Your identity is a keypair:
 
-- **nsec** — Private key (keep secret!)
-- **npub** — Public key (your identity)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Nostr Identity                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Private Key (nsec)              Public Key (npub)            │
+│   ────────────────────            ─────────────────            │
+│   • Keep secret!                  • Share freely               │
+│   • Signs events                  • Your identity              │
+│   • Controls account              • Others mention you         │
+│   • Cannot be recovered           • Derived from nsec          │
+│                                                                 │
+│   nsec1xyz789...                  npub1abc123...               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 No registration. No username. Just cryptographic keys.
 
-```bash
-# Generate with noskey
-noskey generate
-# npub1abc123...
-# nsec1xyz789...
-```
+### Key Formats
+
+| Format | Prefix | Use |
+|--------|--------|-----|
+| **npub** | npub1 | Public key (bech32) |
+| **nsec** | nsec1 | Private key (bech32) |
+| **note** | note1 | Event ID |
+| **nevent** | nevent1 | Event with relay hints |
+| **nprofile** | nprofile1 | Profile with relay hints |
+| **naddr** | naddr1 | Addressable event reference |
 
 ### Relays
 
-Relays are dumb servers that store and forward events:
+Relays are servers that store and forward events:
 
 ```
 ┌─────────┐     ┌─────────┐     ┌─────────┐
@@ -59,9 +87,11 @@ Relays are dumb servers that store and forward events:
 └─────────┘     └─────────┘     └─────────┘
 ```
 
-- Clients publish events to relays
-- Clients subscribe to events from relays
+Key properties:
 - Relays don't verify identity — the signature does
+- Relays can filter, rate-limit, or charge
+- Users choose which relays to use
+- Events are replicated across relays
 
 ### Multiple Relays
 
@@ -71,7 +101,8 @@ Users connect to multiple relays for redundancy:
 const relays = [
   "wss://relay.damus.io",
   "wss://relay.nostr.band",
-  "wss://nostr.wine"
+  "wss://nos.lol",
+  "wss://relay.snort.social"
 ];
 ```
 
@@ -79,57 +110,170 @@ If one relay goes down or censors you, others still have your events.
 
 ## Event Kinds
 
+### Basic Kinds
+
+| Kind | Purpose | Replaceable |
+|------|---------|-------------|
+| 0 | Profile metadata | Yes |
+| 1 | Text note (short post) | No |
+| 2 | Relay list (deprecated) | Yes |
+| 3 | Contact list (follows) | Yes |
+| 4 | Encrypted DM (legacy) | No |
+| 5 | Event deletion | No |
+| 6 | Repost | No |
+| 7 | Reaction (like) | No |
+
+### Extended Kinds
+
 | Kind | Purpose |
 |------|---------|
-| 0 | Profile metadata |
-| 1 | Text note (tweet-like) |
-| 3 | Contact list (follows) |
-| 4 | Encrypted direct message |
-| 7 | Reaction (like) |
+| 1063 | File metadata |
 | 1984 | Report |
+| 9734 | Zap request |
+| 9735 | Zap receipt |
+| 10002 | Relay list metadata |
+| 30000 | Categorized people list |
+| 30008 | Profile badges |
+| 30009 | Badge definition |
 | 30023 | Long-form content |
+| 30311 | Live event |
+
+### Replaceable vs Regular
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Event Types                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Regular Events (kind 1, 4, 7, etc.):                         │
+│   └── Each event is permanent and unique                       │
+│   └── Cannot be "updated" - only deleted                       │
+│                                                                 │
+│   Replaceable Events (kind 0, 3, 10002, etc.):                 │
+│   └── Latest event replaces previous                           │
+│   └── Only most recent kept by relays                          │
+│                                                                 │
+│   Addressable Events (kind 30000-39999):                       │
+│   └── Identified by kind + pubkey + d-tag                      │
+│   └── Can be updated by publishing new version                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Tags
+
+Tags provide metadata and enable threading:
+
+### Common Tags
+
+| Tag | Format | Purpose |
+|-----|--------|---------|
+| `e` | `["e", "<event-id>", "<relay>", "<marker>"]` | Reference event |
+| `p` | `["p", "<pubkey>", "<relay>"]` | Mention user |
+| `t` | `["t", "hashtag"]` | Hashtag |
+| `a` | `["a", "<kind>:<pubkey>:<d-tag>"]` | Reference addressable |
+| `d` | `["d", "identifier"]` | Addressable identifier |
+| `r` | `["r", "url"]` | Reference URL |
+
+### Threading with e-tags
+
+```json
+{
+  "kind": 1,
+  "tags": [
+    ["e", "root-event-id", "", "root"],
+    ["e", "reply-to-id", "", "reply"],
+    ["p", "author-of-root"],
+    ["p", "author-of-reply"]
+  ],
+  "content": "This is a reply in a thread"
+}
+```
 
 ## NIPs (Nostr Implementation Possibilities)
 
 NIPs are specifications for Nostr features:
 
+### Core NIPs
+
 | NIP | Description |
 |-----|-------------|
 | [NIP-01](https://github.com/nostr-protocol/nips/blob/master/01.md) | Basic protocol |
-| [NIP-05](https://github.com/nostr-protocol/nips/blob/master/05.md) | DNS-based verification |
+| [NIP-02](https://github.com/nostr-protocol/nips/blob/master/02.md) | Contact list |
+| [NIP-05](https://github.com/nostr-protocol/nips/blob/master/05.md) | DNS verification |
 | [NIP-19](https://github.com/nostr-protocol/nips/blob/master/19.md) | bech32 encoding |
-| [NIP-98](https://github.com/nostr-protocol/nips/blob/master/98.md) | HTTP Auth |
 
-### NIP-98: HTTP Authentication
+### Identity & Auth
 
-Nostr events can authenticate HTTP requests:
+| NIP | Description |
+|-----|-------------|
+| [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md) | Browser extension signing |
+| [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md) | Remote signing (bunker) |
+| [NIP-98](https://github.com/nostr-protocol/nips/blob/master/98.md) | HTTP authentication |
 
-```http
-GET /protected-resource HTTP/1.1
-Authorization: Nostr <base64-encoded-event>
-```
+### Messaging
 
-This lets you use your Nostr identity to authenticate to any HTTP service — including Solid pods via [Nosdav](/projects/nosdav).
+| NIP | Description |
+|-----|-------------|
+| [NIP-04](https://github.com/nostr-protocol/nips/blob/master/04.md) | Encrypted DMs (legacy) |
+| [NIP-17](https://github.com/nostr-protocol/nips/blob/master/17.md) | Private DMs (improved) |
+| [NIP-44](https://github.com/nostr-protocol/nips/blob/master/44.md) | Versioned encryption |
 
-## Communication
+### Payments
 
-### WebSocket Protocol
+| NIP | Description |
+|-----|-------------|
+| [NIP-57](https://github.com/nostr-protocol/nips/blob/master/57.md) | Zaps (Lightning) |
+| [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md) | Nostr Wallet Connect |
+
+### Content
+
+| NIP | Description |
+|-----|-------------|
+| [NIP-23](https://github.com/nostr-protocol/nips/blob/master/23.md) | Long-form content |
+| [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md) | Lists |
+| [NIP-52](https://github.com/nostr-protocol/nips/blob/master/52.md) | Calendar events |
+| [NIP-53](https://github.com/nostr-protocol/nips/blob/master/53.md) | Live activities |
+| [NIP-58](https://github.com/nostr-protocol/nips/blob/master/58.md) | Badges |
+| [NIP-65](https://github.com/nostr-protocol/nips/blob/master/65.md) | Relay list metadata |
+
+## WebSocket Protocol
 
 Clients communicate with relays via WebSocket:
 
+### Client to Relay
+
 ```javascript
 // Subscribe to events
-["REQ", "subscription-id", {
-  "kinds": [1],
-  "authors": ["npub1abc..."],
-  "limit": 10
-}]
+["REQ", "sub-id", { filters... }]
 
 // Publish an event
-["EVENT", { /* event object */ }]
+["EVENT", { event... }]
 
 // Close subscription
-["CLOSE", "subscription-id"]
+["CLOSE", "sub-id"]
+
+// Authenticate (NIP-42)
+["AUTH", { auth-event... }]
+```
+
+### Relay to Client
+
+```javascript
+// Event matching subscription
+["EVENT", "sub-id", { event... }]
+
+// End of stored events
+["EOSE", "sub-id"]
+
+// Notice/error
+["NOTICE", "message"]
+
+// Command result
+["OK", "event-id", true/false, "message"]
+
+// Auth challenge
+["AUTH", "challenge-string"]
 ```
 
 ### Filters
@@ -138,37 +282,161 @@ Query events with filters:
 
 ```json
 {
-  "kinds": [1],           // Text notes
-  "authors": ["npub1..."], // From these pubkeys
-  "since": 1234567890,    // After this timestamp
-  "#t": ["bitcoin"],      // With this hashtag
+  "ids": ["abc123..."],
+  "authors": ["pubkey1...", "pubkey2..."],
+  "kinds": [1, 6, 7],
+  "since": 1234567890,
+  "until": 1234599999,
+  "#e": ["event-id"],
+  "#p": ["pubkey"],
+  "#t": ["bitcoin", "nostr"],
   "limit": 50
 }
 ```
+
+## NIP-05 Verification
+
+Human-readable identifiers via DNS:
+
+```
+alice@example.com
+```
+
+Resolution:
+```http
+GET https://example.com/.well-known/nostr.json?name=alice
+```
+
+Response:
+```json
+{
+  "names": {
+    "alice": "pubkey-hex..."
+  },
+  "relays": {
+    "pubkey-hex...": ["wss://relay1...", "wss://relay2..."]
+  }
+}
+```
+
+## Zaps (Lightning Payments)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Zap Flow                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   1. User clicks "Zap" on a note                               │
+│              │                                                  │
+│              ▼                                                  │
+│   2. Client creates zap request (kind 9734)                    │
+│              │                                                  │
+│              ▼                                                  │
+│   3. Request sent to recipient's LNURL server                  │
+│              │                                                  │
+│              ▼                                                  │
+│   4. Server returns Lightning invoice                          │
+│              │                                                  │
+│              ▼                                                  │
+│   5. User pays invoice                                         │
+│              │                                                  │
+│              ▼                                                  │
+│   6. Server publishes zap receipt (kind 9735)                  │
+│              │                                                  │
+│              ▼                                                  │
+│   7. Receipt visible on relays                                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## NIP-46 Remote Signing
+
+Keep keys secure with remote signing:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    NIP-46 Bunker                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Client (Damus, etc.)        Signer (Amber, nsec.app)         │
+│        │                              │                         │
+│        │  "Please sign this event"   │                         │
+│        │─────────────────────────────►│                         │
+│        │                              │ (holds your nsec)       │
+│        │  "Here's the signature"     │                         │
+│        │◄─────────────────────────────│                         │
+│        │                              │                         │
+│   nsec never leaves the signer                                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Connection string:
+```
+bunker://npub...@relay.example?secret=abc123
+```
+
+## NIP-98 HTTP Authentication
+
+Use Nostr identity for HTTP APIs:
+
+```http
+GET /api/data HTTP/1.1
+Authorization: Nostr <base64-encoded-kind-27235-event>
+```
+
+Enables:
+- Solid pod access via [Nosdav](/projects/nosdav)
+- API authentication
+- File uploads
 
 ## Implementations
 
 ### Clients
 
-- **[Damus](https://damus.io)** — iOS client
-- **[Amethyst](https://github.com/vitorpamplona/amethyst)** — Android client
-- **[Snort](https://snort.social)** — Web client
-- **[Primal](https://primal.net)** — Web/mobile client
+| Client | Platform | Focus |
+|--------|----------|-------|
+| [Damus](/projects/damus) | iOS | Full-featured |
+| [Amethyst](/projects/amethyst) | Android | Full-featured |
+| [Primal](/projects/primal) | Web, iOS, Android | Caching, search |
+| [Snort](/projects/snort) | Web | Clean UI |
+| [Coracle](/projects/coracle) | Web | Privacy |
+| [Gossip](/projects/gossip) | Desktop | Outbox model |
 
 ### Relays
 
-- **[strfry](https://github.com/hoytech/strfry)** — High-performance C++ relay
-- **[nostream](https://github.com/Cameri/nostream)** — TypeScript relay
+| Relay | Language | Features |
+|-------|----------|----------|
+| [strfry](/projects/strfry) | C++ | High performance |
+| [nostream](/projects/nostream) | TypeScript | Easy setup |
 
 ### Libraries
 
-- **[nostr-tools](https://github.com/nbd-wtf/nostr-tools)** — JavaScript library
-- **[Nostr Components](/projects/nostr-components)** — Web components
+| Library | Language |
+|---------|----------|
+| [nostr-tools](/projects/nostr-tools) | JavaScript |
+| [NDK](/projects/ndk) | JavaScript |
+| rust-nostr | Rust |
+| python-nostr | Python |
+
+### Signers
+
+| Signer | Platform |
+|--------|----------|
+| [Amber](/projects/amber) | Android |
+| [nos2x](/projects/nos2x) | Browser |
+| [Alby](/projects/alby) | Browser |
+| [nsec.app](/projects/nsec-app) | Web |
 
 ## Quick Example
 
 ```javascript
-import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools';
+import {
+  generateSecretKey,
+  getPublicKey,
+  finalizeEvent,
+  SimplePool
+} from 'nostr-tools';
 
 // Generate keys
 const sk = generateSecretKey();
@@ -178,13 +446,31 @@ const pk = getPublicKey(sk);
 const event = finalizeEvent({
   kind: 1,
   created_at: Math.floor(Date.now() / 1000),
-  tags: [],
+  tags: [["t", "nostr"]],
   content: 'Hello, Nostr!'
 }, sk);
 
-// Publish to relay
-const ws = new WebSocket('wss://relay.damus.io');
-ws.onopen = () => ws.send(JSON.stringify(['EVENT', event]));
+// Publish to relays
+const pool = new SimplePool();
+const relays = ['wss://relay.damus.io', 'wss://nos.lol'];
+
+await Promise.all(
+  pool.publish(relays, event)
+);
+
+// Subscribe to events
+const sub = pool.subscribeMany(
+  relays,
+  [{ kinds: [1], limit: 10 }],
+  {
+    onevent(event) {
+      console.log('Received:', event.content);
+    },
+    oneose() {
+      console.log('End of stored events');
+    }
+  }
+);
 ```
 
 ## Learn More
@@ -193,3 +479,4 @@ ws.onopen = () => ws.send(JSON.stringify(['EVENT', event]));
 - [Nostr User Guide](/projects/nostr-userguide) — Getting started
 - [Nostr Dev Guide](/projects/nostr-devguide) — Building on Nostr
 - [did:nostr](/projects/did-nostr) — DIDs using Nostr keys
+- [NIPs Repository](https://github.com/nostr-protocol/nips) — All specifications
