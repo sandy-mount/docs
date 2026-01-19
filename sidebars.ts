@@ -124,6 +124,13 @@ const sidebars: SidebarsConfig = {
             'projects/wavlake/index',
             'projects/fountain/index',
             'projects/gossip/index',
+            'projects/lnbits/index',
+            'projects/yakihonne/index',
+            'projects/satellite/index',
+            'projects/0xchat/index',
+            'projects/nsec-app/index',
+            'projects/spring/index',
+            'projects/current/index',
           ],
         },
         {
