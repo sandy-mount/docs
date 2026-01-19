@@ -20,10 +20,28 @@ Everything in ActivityPub is an Actor — people, bots, groups, services:
   "type": "Person",
   "id": "https://social.example/users/alice",
   "name": "Alice",
+  "preferredUsername": "alice",
   "inbox": "https://social.example/users/alice/inbox",
-  "outbox": "https://social.example/users/alice/outbox"
+  "outbox": "https://social.example/users/alice/outbox",
+  "followers": "https://social.example/users/alice/followers",
+  "following": "https://social.example/users/alice/following",
+  "publicKey": {
+    "id": "https://social.example/users/alice#main-key",
+    "owner": "https://social.example/users/alice",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----..."
+  }
 }
 ```
+
+### Actor Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **Person** | Human user | @alice@social.example |
+| **Service** | Bot or automated account | @bot@social.example |
+| **Application** | App-level actor | API integration |
+| **Group** | Community/group | @devs@social.example |
+| **Organization** | Organization | @company@social.example |
 
 ### Activities
 
@@ -33,29 +51,61 @@ Actions are represented as Activities:
 {
   "@context": "https://www.w3.org/ns/activitystreams",
   "type": "Create",
+  "id": "https://social.example/activities/123",
   "actor": "https://social.example/users/alice",
+  "published": "2024-01-15T12:00:00Z",
+  "to": ["https://www.w3.org/ns/activitystreams#Public"],
+  "cc": ["https://social.example/users/alice/followers"],
   "object": {
     "type": "Note",
-    "content": "Hello, Fediverse!"
+    "id": "https://social.example/notes/456",
+    "content": "Hello, Fediverse!",
+    "attributedTo": "https://social.example/users/alice"
   }
 }
 ```
 
-Common activity types:
-- **Create** — Make something new
-- **Follow** — Subscribe to an actor
-- **Like** — Express appreciation
-- **Announce** — Share/boost content
-- **Delete** — Remove content
+### Activity Types
+
+| Activity | Purpose | Side Effect |
+|----------|---------|-------------|
+| **Create** | Make something new | Add object to target inbox |
+| **Update** | Modify existing object | Replace object |
+| **Delete** | Remove content | Remove object |
+| **Follow** | Subscribe to actor | Add to following list |
+| **Accept** | Accept request | Confirm follow, etc. |
+| **Reject** | Decline request | Deny follow, etc. |
+| **Like** | Express appreciation | Add to liked collection |
+| **Announce** | Share/boost content | Redistribute activity |
+| **Undo** | Reverse previous activity | Unfollow, unlike, etc. |
 
 ### Inbox/Outbox
 
 Every actor has:
 
-- **Inbox** — Where they receive activities from others
-- **Outbox** — Where their activities are published
-
-Federation happens by POSTing activities to inboxes.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Actor Endpoints                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Inbox (POST)                                                  │
+│   └── Receive activities from other servers                    │
+│                                                                 │
+│   Outbox (GET/POST)                                            │
+│   └── GET: Read actor's activities                             │
+│   └── POST: Client-to-server activity submission               │
+│                                                                 │
+│   Followers (GET)                                               │
+│   └── Collection of followers                                  │
+│                                                                 │
+│   Following (GET)                                               │
+│   └── Collection of followed actors                            │
+│                                                                 │
+│   Liked (GET)                                                   │
+│   └── Collection of liked objects                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## How Federation Works
 
@@ -70,14 +120,139 @@ Federation happens by POSTing activities to inboxes.
 │      │ POST  │                    │      │       │
 │      ▼       │                    │      │       │
 │  [Outbox]────┼────HTTP POST──────►│  [Inbox]    │
-│              │                    │              │
+│              │   + HTTP Signature │              │
 └──────────────┘                    └──────────────┘
 ```
 
 1. Alice creates a post on Server A
 2. Server A sees Alice follows Bob on Server B
-3. Server A POSTs the activity to Bob's inbox
-4. Bob's server displays Alice's post
+3. Server A signs the activity with HTTP Signatures
+4. Server A POSTs the activity to Bob's inbox
+5. Server B verifies the signature
+6. Bob's server displays Alice's post
+
+## Addressing
+
+### Audience Fields
+
+| Field | Visibility |
+|-------|------------|
+| `to` | Primary recipients |
+| `cc` | Secondary recipients (visible) |
+| `bcc` | Hidden recipients |
+| `audience` | Target audience |
+
+### Common Patterns
+
+```json
+// Public post
+{
+  "to": ["https://www.w3.org/ns/activitystreams#Public"],
+  "cc": ["https://social.example/users/alice/followers"]
+}
+
+// Followers-only post
+{
+  "to": ["https://social.example/users/alice/followers"]
+}
+
+// Direct message
+{
+  "to": ["https://other.server/users/bob"]
+}
+
+// Mention in public post
+{
+  "to": ["https://www.w3.org/ns/activitystreams#Public"],
+  "cc": [
+    "https://social.example/users/alice/followers",
+    "https://other.server/users/bob"
+  ],
+  "tag": [{
+    "type": "Mention",
+    "href": "https://other.server/users/bob",
+    "name": "@bob@other.server"
+  }]
+}
+```
+
+## HTTP Signatures
+
+ActivityPub uses HTTP Signatures for authentication:
+
+### Signing a Request
+
+```http
+POST /users/bob/inbox HTTP/1.1
+Host: other.server
+Date: Sun, 15 Jan 2024 12:00:00 GMT
+Digest: SHA-256=base64(sha256(body))
+Signature: keyId="https://social.example/users/alice#main-key",
+           algorithm="rsa-sha256",
+           headers="(request-target) host date digest",
+           signature="base64(signature)"
+Content-Type: application/activity+json
+
+{ ... activity ... }
+```
+
+### Verification Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 HTTP Signature Verification                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   1. Receiving server gets POST to inbox                       │
+│              │                                                  │
+│              ▼                                                  │
+│   2. Parse Signature header, extract keyId                     │
+│              │                                                  │
+│              ▼                                                  │
+│   3. Fetch actor document from keyId URL                       │
+│              │                                                  │
+│              ▼                                                  │
+│   4. Extract publicKey from actor                              │
+│              │                                                  │
+│              ▼                                                  │
+│   5. Verify signature against signed headers                   │
+│              │                                                  │
+│              ▼                                                  │
+│   6. Accept or reject activity                                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Collections
+
+### Paginated Collections
+
+```json
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "OrderedCollection",
+  "id": "https://social.example/users/alice/outbox",
+  "totalItems": 1234,
+  "first": "https://social.example/users/alice/outbox?page=1",
+  "last": "https://social.example/users/alice/outbox?page=50"
+}
+```
+
+### Collection Page
+
+```json
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "OrderedCollectionPage",
+  "id": "https://social.example/users/alice/outbox?page=1",
+  "partOf": "https://social.example/users/alice/outbox",
+  "next": "https://social.example/users/alice/outbox?page=2",
+  "orderedItems": [
+    { "type": "Create", ... },
+    { "type": "Announce", ... }
+  ]
+}
+```
 
 ## Discovery with WebFinger
 
@@ -85,14 +260,26 @@ WebFinger maps handles like `@alice@social.example` to ActivityPub actors:
 
 ```http
 GET /.well-known/webfinger?resource=acct:alice@social.example
+```
 
+Response:
+```json
 {
   "subject": "acct:alice@social.example",
+  "aliases": [
+    "https://social.example/users/alice",
+    "https://social.example/@alice"
+  ],
   "links": [
     {
       "rel": "self",
       "type": "application/activity+json",
       "href": "https://social.example/users/alice"
+    },
+    {
+      "rel": "http://webfinger.net/rel/profile-page",
+      "type": "text/html",
+      "href": "https://social.example/@alice"
     }
   ]
 }
@@ -102,29 +289,71 @@ GET /.well-known/webfinger?resource=acct:alice@social.example
 
 ActivityPub uses ActivityStreams 2.0 vocabulary:
 
-| Object Type | Purpose |
-|-------------|---------|
-| Note | Short text post |
-| Article | Long-form content |
-| Image | Photo/image |
-| Video | Video content |
-| Event | Calendar event |
-| Question | Poll |
+| Object Type | Purpose | Example |
+|-------------|---------|---------|
+| **Note** | Short text post | Tweet/toot |
+| **Article** | Long-form content | Blog post |
+| **Image** | Photo/image | Photo post |
+| **Video** | Video content | Video upload |
+| **Audio** | Audio content | Podcast |
+| **Event** | Calendar event | Meetup |
+| **Question** | Poll | Survey |
+| **Page** | Web page | Link share |
+
+## Common Federation Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Failed delivery | Server down | Retry with backoff |
+| Invalid signature | Clock skew | Sync server time |
+| Actor not found | Deleted account | Handle gracefully |
+| Rate limited | Too many requests | Implement queue |
+| Timeout | Slow server | Set reasonable timeout |
+
+## Follow Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Follow Flow                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Alice wants to follow Bob:                                   │
+│                                                                 │
+│   1. Alice's server sends Follow to Bob's inbox                │
+│      { "type": "Follow",                                       │
+│        "actor": "alice",                                       │
+│        "object": "bob" }                                       │
+│                                                                 │
+│   2. Bob's server can Accept or Reject                         │
+│      { "type": "Accept",                                       │
+│        "actor": "bob",                                         │
+│        "object": { "type": "Follow", ... } }                   │
+│                                                                 │
+│   3. On Accept:                                                 │
+│      - Bob adds Alice to followers                             │
+│      - Alice adds Bob to following                             │
+│      - Future posts from Bob go to Alice                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## Implementations
 
 ### Servers
 
-- **[Mastodon](https://joinmastodon.org)** — Microblogging (Twitter-like)
-- **[Pixelfed](https://pixelfed.org)** — Photo sharing (Instagram-like)
-- **[PeerTube](https://joinpeertube.org)** — Video sharing (YouTube-like)
-- **[Lemmy](https://join-lemmy.org)** — Link aggregation (Reddit-like)
-- **[FedBox](/projects/fedbox)** — Generic ActivityPub server
+| Server | Type | Protocol Support |
+|--------|------|------------------|
+| [Mastodon](/projects/mastodon) | Microblogging | Full |
+| [Pixelfed](/projects/pixelfed) | Photo sharing | Full |
+| [PeerTube](/projects/peertube) | Video sharing | Full |
+| [Lemmy](/projects/lemmy) | Link aggregation | Full |
+| [Pleroma](/projects/pleroma) | Microblogging | Full |
+| [FedBox](/projects/fedbox) | Generic server | Core |
 
 ### Libraries
 
 - **[MicroFed](/projects/microfed)** — Minimal ActivityPub library
-- **[activitypub-express](https://github.com/immers-space/activitypub-express)** — Express middleware
+- **activitypub-express** — Express middleware
 
 ## Quick Example
 
@@ -136,40 +365,60 @@ const response = await fetch("https://mastodon.social/users/gargron", {
 });
 const actor = await response.json();
 console.log(actor.name); // "Eugen Rochko"
+console.log(actor.inbox); // Where to send activities
 ```
 
-Posting to an inbox (simplified):
+Posting to an inbox (with HTTP Signatures):
 
 ```javascript
+import { signRequest } from './http-signatures';
+
 const activity = {
   "@context": "https://www.w3.org/ns/activitystreams",
   "type": "Create",
+  "id": "https://my.server/activities/123",
   "actor": "https://my.server/users/me",
   "to": ["https://other.server/users/them"],
   "object": {
     "type": "Note",
-    "content": "Hello!"
+    "id": "https://my.server/notes/456",
+    "content": "Hello!",
+    "attributedTo": "https://my.server/users/me"
   }
 };
+
+const body = JSON.stringify(activity);
+const headers = await signRequest({
+  method: 'POST',
+  url: 'https://other.server/users/them/inbox',
+  body,
+  privateKey,
+  keyId: 'https://my.server/users/me#main-key'
+});
 
 await fetch("https://other.server/users/them/inbox", {
   method: "POST",
   headers: {
-    "Content-Type": "application/activity+json",
-    // Plus HTTP Signatures for authentication
+    ...headers,
+    "Content-Type": "application/activity+json"
   },
-  body: JSON.stringify(activity)
+  body
 });
 ```
 
 ## Specifications
 
-- [ActivityPub](https://www.w3.org/TR/activitypub/) — W3C Recommendation
-- [ActivityStreams 2.0](https://www.w3.org/TR/activitystreams-core/) — Data format
-- [HTTP Signatures](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures) — Authentication
+| Spec | Description |
+|------|-------------|
+| [ActivityPub](https://www.w3.org/TR/activitypub/) | W3C Recommendation |
+| [ActivityStreams 2.0](https://www.w3.org/TR/activitystreams-core/) | Data format |
+| [HTTP Signatures](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures) | Authentication |
+| [WebFinger](https://www.rfc-editor.org/rfc/rfc7033) | Discovery |
+| [NodeInfo](/projects/nodeinfo) | Server metadata |
 
 ## Learn More
 
 - [activitypub.rocks](https://activitypub.rocks) — Community resources
 - [SocialDocs](/projects/socialdocs) — Comprehensive documentation
 - [Federation](/concepts/federation) — The concept behind ActivityPub
+- [WebFinger](/projects/webfinger) — User discovery protocol
