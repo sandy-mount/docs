@@ -53,6 +53,8 @@ const sidebars: SidebarsConfig = {
             'projects/microfed/index',
             'projects/strfry/index',
             'projects/mastodon/index',
+            'projects/pleroma/index',
+            'projects/pixelfed/index',
           ],
         },
         {
@@ -78,6 +80,8 @@ const sidebars: SidebarsConfig = {
             'projects/solid-authn/index',
             'projects/nostr-tools/index',
             'projects/nostr-components/index',
+            'projects/ndk/index',
+            'projects/mashlib/index',
           ],
         },
         {
@@ -94,6 +98,7 @@ const sidebars: SidebarsConfig = {
             'projects/damus/index',
             'projects/amethyst/index',
             'projects/primal/index',
+            'projects/snort/index',
           ],
         },
         {
