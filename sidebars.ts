@@ -51,6 +51,8 @@ const sidebars: SidebarsConfig = {
             'projects/nosdav/index',
             'projects/fedbox/index',
             'projects/microfed/index',
+            'projects/strfry/index',
+            'projects/mastodon/index',
           ],
         },
         {
@@ -62,6 +64,8 @@ const sidebars: SidebarsConfig = {
             'projects/slips/index',
             'projects/lws/index',
             'projects/did-nostr/index',
+            'projects/did-key/index',
+            'projects/did-web/index',
           ],
         },
         {
@@ -87,6 +91,9 @@ const sidebars: SidebarsConfig = {
             'projects/noskey/index',
             'projects/fonstr/index',
             'projects/nostrgit/index',
+            'projects/damus/index',
+            'projects/amethyst/index',
+            'projects/primal/index',
           ],
         },
         {
