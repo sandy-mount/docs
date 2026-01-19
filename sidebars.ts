@@ -55,6 +55,8 @@ const sidebars: SidebarsConfig = {
             'projects/mastodon/index',
             'projects/pleroma/index',
             'projects/pixelfed/index',
+            'projects/peertube/index',
+            'projects/lemmy/index',
           ],
         },
         {
@@ -99,6 +101,10 @@ const sidebars: SidebarsConfig = {
             'projects/amethyst/index',
             'projects/primal/index',
             'projects/snort/index',
+            'projects/coracle/index',
+            'projects/habla/index',
+            'projects/amber/index',
+            'projects/alby/index',
           ],
         },
         {
