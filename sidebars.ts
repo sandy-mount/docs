@@ -74,6 +74,8 @@ const sidebars: SidebarsConfig = {
             'projects/blossom/index',
             'projects/cashu/index',
             'projects/universal-resolver/index',
+            'projects/webfinger/index',
+            'projects/webid/index',
           ],
         },
         {
@@ -118,6 +120,10 @@ const sidebars: SidebarsConfig = {
             'projects/flockstr/index',
             'projects/shopstr/index',
             'projects/penny/index',
+            'projects/inrupt/index',
+            'projects/wavlake/index',
+            'projects/fountain/index',
+            'projects/gossip/index',
           ],
         },
         {
