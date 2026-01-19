@@ -105,6 +105,9 @@ const sidebars: SidebarsConfig = {
             'projects/habla/index',
             'projects/amber/index',
             'projects/alby/index',
+            'projects/nostrudel/index',
+            'projects/zapstr/index',
+            'projects/highlighter/index',
           ],
         },
         {
