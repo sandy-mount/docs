@@ -70,6 +70,7 @@ const sidebars: SidebarsConfig = {
             'projects/did-nostr/index',
             'projects/did-key/index',
             'projects/did-web/index',
+            'projects/blossom/index',
           ],
         },
         {
@@ -108,6 +109,9 @@ const sidebars: SidebarsConfig = {
             'projects/nostrudel/index',
             'projects/zapstr/index',
             'projects/highlighter/index',
+            'projects/zapstream/index',
+            'projects/nos2x/index',
+            'projects/iris/index',
           ],
         },
         {
