@@ -45,6 +45,8 @@ const sidebars: SidebarsConfig = {
           items: [
             'projects/sandymount/index',
             'projects/jss/index',
+            'projects/css/index',
+            'projects/nss/index',
             'projects/nosdav/index',
             'projects/fedbox/index',
             'projects/microfed/index',
@@ -58,6 +60,17 @@ const sidebars: SidebarsConfig = {
             'projects/solid-lite/index',
             'projects/slips/index',
             'projects/lws/index',
+            'projects/did-nostr/index',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Libraries',
+          collapsed: true,
+          items: [
+            'projects/rdflib-js/index',
+            'projects/solid-client/index',
+            'projects/nostr-components/index',
           ],
         },
         {
@@ -69,6 +82,18 @@ const sidebars: SidebarsConfig = {
             'projects/solid-chat/index',
             'projects/ditto/index',
             'projects/noskey/index',
+            'projects/fonstr/index',
+            'projects/nostrgit/index',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Documentation',
+          collapsed: true,
+          items: [
+            'projects/socialdocs/index',
+            'projects/nostr-userguide/index',
+            'projects/nostr-devguide/index',
           ],
         },
         {
@@ -80,6 +105,7 @@ const sidebars: SidebarsConfig = {
             'projects/blocktrails/index',
             'projects/web-prompts/index',
             'projects/aam/index',
+            'projects/mcp/index',
           ],
         },
       ],

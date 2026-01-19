@@ -36,7 +36,7 @@ await login({
 });
 ```
 
-## NIP-98 (Nostr HTTP Auth)
+## NIP-98 (Nostr HTTP Auth) {#nip-98}
 
 Authenticate HTTP requests with Nostr signatures:
 
