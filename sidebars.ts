@@ -57,6 +57,7 @@ const sidebars: SidebarsConfig = {
             'projects/pixelfed/index',
             'projects/peertube/index',
             'projects/lemmy/index',
+            'projects/nostream/index',
           ],
         },
         {
@@ -71,6 +72,8 @@ const sidebars: SidebarsConfig = {
             'projects/did-key/index',
             'projects/did-web/index',
             'projects/blossom/index',
+            'projects/cashu/index',
+            'projects/universal-resolver/index',
           ],
         },
         {
@@ -112,6 +115,9 @@ const sidebars: SidebarsConfig = {
             'projects/zapstream/index',
             'projects/nos2x/index',
             'projects/iris/index',
+            'projects/flockstr/index',
+            'projects/shopstr/index',
+            'projects/penny/index',
           ],
         },
         {
