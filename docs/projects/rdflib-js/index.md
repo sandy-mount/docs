@@ -94,6 +94,92 @@ await fetcher.load('https://alice.example/profile');
 | JSON-LD | application/ld+json | ✓ | ✓ |
 | RDF/XML | application/rdf+xml | ✓ | ✓ |
 | N3 | text/n3 | ✓ | ✓ |
+| RDFa | text/html | ✓ | — |
+
+## UpdateManager (CRUD Operations)
+
+For read-write applications, UpdateManager handles saving changes:
+
+```javascript
+import { graph, Fetcher, UpdateManager, sym, st } from 'rdflib';
+
+const store = graph();
+const fetcher = new Fetcher(store);
+const updater = new UpdateManager(store);
+
+// Load existing data
+await fetcher.load('https://alice.pod/profile');
+
+// Prepare updates
+const me = sym('https://alice.pod/profile#me');
+const FOAF = Namespace('http://xmlns.com/foaf/0.1/');
+
+const deletions = [];
+const insertions = [
+  st(me, FOAF('name'), lit('Alice Smith'), me.doc())
+];
+
+// Send PATCH to server
+await updater.update(deletions, insertions);
+```
+
+## Real-Time Collaboration
+
+rdflib.js supports WebSocket subscriptions for live updates:
+
+```javascript
+import { graph, Fetcher, UpdateManager } from 'rdflib';
+
+const store = graph();
+const fetcher = new Fetcher(store);
+const updater = new UpdateManager(store);
+
+// Load and subscribe
+await fetcher.load('https://alice.pod/chat');
+
+// Store automatically updates when others make changes
+// UI can react to store changes
+```
+
+## Provenance Tracking
+
+rdflib.js tracks where each triple came from:
+
+```javascript
+// Each statement has a 'why' (graph/source)
+const statements = store.match(null, null, null, doc);
+
+statements.forEach(st => {
+  console.log(`${st.subject} ${st.predicate} ${st.object}`);
+  console.log(`  Source: ${st.why}`);
+});
+```
+
+## SPARQL-like Queries
+
+Basic graph pattern matching (not full SPARQL):
+
+```javascript
+import { graph, variable } from 'rdflib';
+
+const store = graph();
+const x = variable('x');
+
+// Find all things Alice knows
+const results = store.match(alice, FOAF('knows'), x);
+```
+
+## Comparison with solid-client
+
+| Feature | rdflib.js | solid-client |
+|---------|-----------|--------------|
+| Level | Low-level | High-level |
+| Learning curve | Steeper | Gentler |
+| Flexibility | Maximum | Opinionated |
+| Use case | Libraries, complex apps | Typical Solid apps |
+| Maintained by | Community | Inrupt |
+
+Use rdflib.js when you need fine-grained control. Use [solid-client](/projects/solid-client) for most applications.
 
 ## Links
 

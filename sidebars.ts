@@ -15,6 +15,7 @@ const sidebars: SidebarsConfig = {
         'concepts/linked-data',
         'concepts/agentic-web',
         'concepts/local-first',
+        'concepts/architecture',
       ],
     },
     {
@@ -70,6 +71,8 @@ const sidebars: SidebarsConfig = {
           items: [
             'projects/rdflib-js/index',
             'projects/solid-client/index',
+            'projects/solid-authn/index',
+            'projects/nostr-tools/index',
             'projects/nostr-components/index',
           ],
         },
@@ -120,6 +123,8 @@ const sidebars: SidebarsConfig = {
         'guides/authentication',
         'guides/building-solid-apps',
         'guides/nostr-getting-started',
+        'guides/production-deployment',
+        'guides/multi-protocol',
       ],
     },
     {
