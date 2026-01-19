@@ -23,6 +23,28 @@ const config: Config = {
     locales: ['en'],
   },
 
+  headTags: [
+    // Structured data for rich snippets
+    {
+      tagName: 'script',
+      attributes: {
+        type: 'application/ld+json',
+      },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'SAND Docs',
+        description: 'Documentation for the SAND stack - Solid, ActivityPub, Nostr, DID',
+        url: 'https://sandy-mount.github.io/docs/',
+        publisher: {
+          '@type': 'Organization',
+          name: 'Sandymount',
+          url: 'https://sandy-mount.com',
+        },
+      }),
+    },
+  ],
+
   presets: [
     [
       'classic',
@@ -30,7 +52,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           routeBasePath: '/',
-          editUrl: 'https://github.com/sandy-mount/docs/tree/gh-pages/',
+          editUrl: 'https://github.com/sandy-mount/docs/tree/main/',
         },
         blog: false,
         theme: {
@@ -41,12 +63,24 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'img/social-card.png',
+    image: 'img/social-card.svg',
 
     metadata: [
-      {name: 'keywords', content: 'SAND, Solid, ActivityPub, Nostr, DID, decentralized web, linked data, agentic'},
-      {name: 'description', content: 'Documentation for the SAND stack - Solid, ActivityPub, Nostr, DID - building the decentralized, agentic web'},
+      // Basic meta
+      {name: 'keywords', content: 'SAND, Solid, ActivityPub, Nostr, DID, decentralized web, linked data, agentic web, data sovereignty, federation'},
+      {name: 'author', content: 'Sandymount'},
+
+      // Open Graph
       {property: 'og:type', content: 'website'},
+      {property: 'og:site_name', content: 'SAND Docs'},
+      {property: 'og:title', content: 'SAND - The Stack for the Decentralized Web'},
+      {property: 'og:description', content: 'Documentation for Solid, ActivityPub, Nostr & DID. Build apps where users own their data and agents serve their interests.'},
+      {property: 'og:locale', content: 'en_US'},
+
+      // Twitter Card
+      {name: 'twitter:card', content: 'summary_large_image'},
+      {name: 'twitter:title', content: 'SAND Docs'},
+      {name: 'twitter:description', content: 'The Stack for the Decentralized Web - Solid, ActivityPub, Nostr, DID'},
     ],
 
     colorMode: {
