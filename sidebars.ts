@@ -76,6 +76,7 @@ const sidebars: SidebarsConfig = {
             'projects/universal-resolver/index',
             'projects/webfinger/index',
             'projects/webid/index',
+            'projects/nodeinfo/index',
           ],
         },
         {
@@ -139,6 +140,20 @@ const sidebars: SidebarsConfig = {
             'projects/njump/index',
             'projects/slidestr/index',
             'projects/flotilla/index',
+            'projects/yana/index',
+            'projects/listr/index',
+            'projects/wikifreedia/index',
+            'projects/freerse/index',
+            'projects/blowater/index',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Bridges',
+          collapsed: true,
+          items: [
+            'projects/mostr/index',
+            'projects/bridgy-fed/index',
           ],
         },
         {
