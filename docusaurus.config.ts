@@ -16,7 +16,7 @@ const config: Config = {
   },
   themes: ['@docusaurus/theme-mermaid'],
 
-  url: 'https://sandy-mount.github.io',
+  url: 'https://sandy-mount.com',
   baseUrl: '/docs/',
   organizationName: 'sandy-mount',
   projectName: 'docs',
@@ -40,7 +40,7 @@ const config: Config = {
         '@type': 'WebSite',
         name: 'SAND Docs',
         description: 'Documentation for the SAND stack - Solid, ActivityPub, Nostr, DID',
-        url: 'https://sandy-mount.github.io/docs/',
+        url: 'https://sandy-mount.com/docs/',
         publisher: {
           '@type': 'Organization',
           name: 'Sandymount',
