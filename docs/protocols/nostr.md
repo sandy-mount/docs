@@ -46,21 +46,19 @@ Key properties:
 
 Your identity is a keypair:
 
+<div className="grid-2col">
+
+| Private Key (nsec) | Public Key (npub) |
+|-------------------|-------------------|
+| Keep secret! | Share freely |
+| Signs events | Your identity |
+| Controls account | Others mention you |
+| Cannot be recovered | Derived from nsec |
+
+</div>
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Nostr Identity                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Private Key (nsec)              Public Key (npub)            │
-│   ────────────────────            ─────────────────            │
-│   • Keep secret!                  • Share freely               │
-│   • Signs events                  • Your identity              │
-│   • Controls account              • Others mention you         │
-│   • Cannot be recovered           • Derived from nsec          │
-│                                                                 │
-│   nsec1xyz789...                  npub1abc123...               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+nsec1xyz789...  →  npub1abc123...
 ```
 
 No registration. No username. Just cryptographic keys.
@@ -80,11 +78,12 @@ No registration. No username. Just cryptographic keys.
 
 Relays are servers that store and forward events:
 
-```
-┌─────────┐     ┌─────────┐     ┌─────────┐
-│ Client  │────►│  Relay  │◄────│ Client  │
-│ (write) │     │ (store) │     │ (read)  │
-└─────────┘     └─────────┘     └─────────┘
+```mermaid
+flowchart LR
+    Write["📱 Client<br/><small>(write)</small>"] --> Relay["⚡ Relay<br/><small>(store)</small>"]
+    Relay --> Read["📱 Client<br/><small>(read)</small>"]
+
+    style Relay fill:#fef3c7,stroke:#d97706
 ```
 
 Key properties:
@@ -140,25 +139,11 @@ If one relay goes down or censors you, others still have your events.
 
 ### Replaceable vs Regular
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Event Types                                │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Regular Events (kind 1, 4, 7, etc.):                         │
-│   └── Each event is permanent and unique                       │
-│   └── Cannot be "updated" - only deleted                       │
-│                                                                 │
-│   Replaceable Events (kind 0, 3, 10002, etc.):                 │
-│   └── Latest event replaces previous                           │
-│   └── Only most recent kept by relays                          │
-│                                                                 │
-│   Addressable Events (kind 30000-39999):                       │
-│   └── Identified by kind + pubkey + d-tag                      │
-│   └── Can be updated by publishing new version                 │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Event Type | Kinds | Behavior |
+|------------|-------|----------|
+| **Regular** | 1, 4, 7, etc. | Permanent and unique, can only be deleted |
+| **Replaceable** | 0, 3, 10002, etc. | Latest event replaces previous |
+| **Addressable** | 30000-39999 | Identified by kind + pubkey + d-tag, updatable |
 
 ## Tags
 
@@ -321,54 +306,37 @@ Response:
 
 ## Zaps (Lightning Payments)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Zap Flow                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   1. User clicks "Zap" on a note                               │
-│              │                                                  │
-│              ▼                                                  │
-│   2. Client creates zap request (kind 9734)                    │
-│              │                                                  │
-│              ▼                                                  │
-│   3. Request sent to recipient's LNURL server                  │
-│              │                                                  │
-│              ▼                                                  │
-│   4. Server returns Lightning invoice                          │
-│              │                                                  │
-│              ▼                                                  │
-│   5. User pays invoice                                         │
-│              │                                                  │
-│              ▼                                                  │
-│   6. Server publishes zap receipt (kind 9735)                  │
-│              │                                                  │
-│              ▼                                                  │
-│   7. Receipt visible on relays                                 │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant Client as 📱 Client
+    participant LNURL as ⚡ LNURL Server
+    participant Relay as 📡 Relay
+
+    User->>Client: 1. Click "Zap"
+    Client->>Client: 2. Create zap request (kind 9734)
+    Client->>LNURL: 3. Send zap request
+    LNURL->>Client: 4. Return Lightning invoice
+    Client->>User: Show invoice
+    User->>LNURL: 5. Pay invoice
+    LNURL->>Relay: 6. Publish zap receipt (kind 9735)
+    Note over Relay: 7. Receipt visible to all
 ```
 
 ## NIP-46 Remote Signing
 
 Keep keys secure with remote signing:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    NIP-46 Bunker                                │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Client (Damus, etc.)        Signer (Amber, nsec.app)         │
-│        │                              │                         │
-│        │  "Please sign this event"   │                         │
-│        │─────────────────────────────►│                         │
-│        │                              │ (holds your nsec)       │
-│        │  "Here's the signature"     │                         │
-│        │◄─────────────────────────────│                         │
-│        │                              │                         │
-│   nsec never leaves the signer                                 │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant Client as 📱 Client<br/>(Damus, etc.)
+    participant Signer as 🔐 Signer<br/>(Amber, nsec.app)
+
+    Note over Signer: Holds your nsec
+    Client->>Signer: "Please sign this event"
+    Signer->>Signer: Sign with nsec
+    Signer->>Client: "Here's the signature"
+    Note over Client,Signer: nsec never leaves the signer
 ```
 
 Connection string:

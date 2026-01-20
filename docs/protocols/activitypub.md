@@ -83,53 +83,31 @@ Actions are represented as Activities:
 
 Every actor has:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Actor Endpoints                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Inbox (POST)                                                  │
-│   └── Receive activities from other servers                    │
-│                                                                 │
-│   Outbox (GET/POST)                                            │
-│   └── GET: Read actor's activities                             │
-│   └── POST: Client-to-server activity submission               │
-│                                                                 │
-│   Followers (GET)                                               │
-│   └── Collection of followers                                  │
-│                                                                 │
-│   Following (GET)                                               │
-│   └── Collection of followed actors                            │
-│                                                                 │
-│   Liked (GET)                                                   │
-│   └── Collection of liked objects                              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| **Inbox** | POST | Receive activities from other servers |
+| **Outbox** | GET | Read actor's activities |
+| **Outbox** | POST | Client-to-server activity submission |
+| **Followers** | GET | Collection of followers |
+| **Following** | GET | Collection of followed actors |
+| **Liked** | GET | Collection of liked objects |
 
 ## How Federation Works
 
-```
-┌──────────────┐                    ┌──────────────┐
-│  Server A    │                    │  Server B    │
-│              │                    │              │
-│  ┌────────┐  │                    │  ┌────────┐  │
-│  │ Alice  │  │                    │  │  Bob   │  │
-│  └────────┘  │                    │  └────────┘  │
-│      │       │                    │      ▲       │
-│      │ POST  │                    │      │       │
-│      ▼       │                    │      │       │
-│  [Outbox]────┼────HTTP POST──────►│  [Inbox]    │
-│              │   + HTTP Signature │              │
-└──────────────┘                    └──────────────┘
-```
+```mermaid
+sequenceDiagram
+    participant Alice as 👤 Alice
+    participant ServerA as 🖥️ Server A
+    participant ServerB as 🖥️ Server B
+    participant Bob as 👤 Bob
 
-1. Alice creates a post on Server A
-2. Server A sees Alice follows Bob on Server B
-3. Server A signs the activity with HTTP Signatures
-4. Server A POSTs the activity to Bob's inbox
-5. Server B verifies the signature
-6. Bob's server displays Alice's post
+    Alice->>ServerA: 1. Create post
+    ServerA->>ServerA: 2. Check followers
+    ServerA->>ServerA: 3. Sign with HTTP Signature
+    ServerA->>ServerB: 4. POST to Bob's inbox
+    ServerB->>ServerB: 5. Verify signature
+    ServerB->>Bob: 6. Display Alice's post
+```
 
 ## Addressing
 
@@ -198,29 +176,18 @@ Content-Type: application/activity+json
 
 ### Verification Flow
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                 HTTP Signature Verification                     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   1. Receiving server gets POST to inbox                       │
-│              │                                                  │
-│              ▼                                                  │
-│   2. Parse Signature header, extract keyId                     │
-│              │                                                  │
-│              ▼                                                  │
-│   3. Fetch actor document from keyId URL                       │
-│              │                                                  │
-│              ▼                                                  │
-│   4. Extract publicKey from actor                              │
-│              │                                                  │
-│              ▼                                                  │
-│   5. Verify signature against signed headers                   │
-│              │                                                  │
-│              ▼                                                  │
-│   6. Accept or reject activity                                 │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    A["1. Receive POST to inbox"] --> B["2. Parse Signature header"]
+    B --> C["3. Fetch actor from keyId URL"]
+    C --> D["4. Extract publicKey"]
+    D --> E["5. Verify signature"]
+    E --> F{"Valid?"}
+    F -->|Yes| G["✅ Accept activity"]
+    F -->|No| H["❌ Reject activity"]
+
+    style G fill:#dcfce7,stroke:#16a34a
+    style H fill:#fee2e2,stroke:#dc2626
 ```
 
 ## Collections
@@ -312,29 +279,21 @@ ActivityPub uses ActivityStreams 2.0 vocabulary:
 
 ## Follow Flow
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Follow Flow                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Alice wants to follow Bob:                                   │
-│                                                                 │
-│   1. Alice's server sends Follow to Bob's inbox                │
-│      { "type": "Follow",                                       │
-│        "actor": "alice",                                       │
-│        "object": "bob" }                                       │
-│                                                                 │
-│   2. Bob's server can Accept or Reject                         │
-│      { "type": "Accept",                                       │
-│        "actor": "bob",                                         │
-│        "object": { "type": "Follow", ... } }                   │
-│                                                                 │
-│   3. On Accept:                                                 │
-│      - Bob adds Alice to followers                             │
-│      - Alice adds Bob to following                             │
-│      - Future posts from Bob go to Alice                       │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant Alice as 👤 Alice
+    participant AliceServer as 🖥️ Alice's Server
+    participant BobServer as 🖥️ Bob's Server
+    participant Bob as 👤 Bob
+
+    Alice->>AliceServer: Want to follow Bob
+    AliceServer->>BobServer: 1. Send Follow activity
+    Note over BobServer: { type: "Follow", actor: alice, object: bob }
+    BobServer->>BobServer: 2. Process request
+    BobServer->>AliceServer: 3. Send Accept/Reject
+    Note over AliceServer: { type: "Accept", object: Follow }
+    AliceServer->>Alice: ✅ Now following Bob
+    Note over BobServer,AliceServer: Future posts from Bob → Alice's inbox
 ```
 
 ## Implementations

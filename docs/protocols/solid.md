@@ -193,26 +193,19 @@ SELECT ?friend WHERE {
 
 ### Solid-OIDC Flow
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                    Solid-OIDC Authentication                   │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│   1. User clicks "Login with Solid"                           │
-│              │                                                 │
-│              ▼                                                 │
-│   2. App redirects to Identity Provider (IdP)                 │
-│              │                                                 │
-│              ▼                                                 │
-│   3. User authenticates at IdP                                │
-│              │                                                 │
-│              ▼                                                 │
-│   4. IdP returns tokens to app                                │
-│              │                                                 │
-│              ▼                                                 │
-│   5. App uses DPoP tokens to access pod                       │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant App as 📱 App
+    participant IdP as 🔐 Identity Provider
+    participant Pod as 📦 Pod
+
+    User->>App: 1. Click "Login with Solid"
+    App->>IdP: 2. Redirect to IdP
+    User->>IdP: 3. Authenticate
+    IdP->>App: 4. Return tokens
+    App->>Pod: 5. Access with DPoP token
+    Pod->>App: 6. Return data
 ```
 
 ### DPoP (Demonstrating Proof-of-Possession)

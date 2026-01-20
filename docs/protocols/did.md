@@ -82,23 +82,15 @@ did:nostr:npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkxl8lt
 ```
 
 **Resolution flow:**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    did:nostr Resolution                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   1. Parse npub from DID                                       │
-│              │                                                  │
-│              ▼                                                  │
-│   2. Query relays for kind 0 (profile) events                  │
-│              │                                                  │
-│              ▼                                                  │
-│   3. Build DID Document from profile                           │
-│              │                                                  │
-│              ▼                                                  │
-│   4. Return document with public key and services              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+
+```mermaid
+flowchart TB
+    A["1. Parse npub from DID"] --> B["2. Query relays for kind 0 (profile) events"]
+    B --> C["3. Build DID Document from profile"]
+    C --> D["4. Return document with public key and services"]
+
+    style A fill:#dbeafe,stroke:#2563eb
+    style D fill:#dcfce7,stroke:#16a34a
 ```
 
 See [did:nostr](/projects/did-nostr) for details.
@@ -145,12 +137,14 @@ Great for ephemeral identities, offline use, or when you don't need key rotation
 
 DID resolution turns a DID into a DID Document:
 
-```
-     DID                    Resolver              DID Document
-┌───────────┐           ┌───────────┐           ┌───────────┐
-│did:nostr: │──────────►│  Resolve  │──────────►│ { "id":   │
-│npub1...   │           │  (fetch)  │           │   ...}    │
-└───────────┘           └───────────┘           └───────────┘
+```mermaid
+flowchart LR
+    DID["🔑 DID<br/><small>did:nostr:npub1...</small>"] --> Resolver["⚙️ Resolver<br/><small>(fetch)</small>"]
+    Resolver --> Doc["📄 DID Document<br/><small>{ id: ... }</small>"]
+
+    style DID fill:#dbeafe,stroke:#2563eb
+    style Resolver fill:#fef3c7,stroke:#d97706
+    style Doc fill:#dcfce7,stroke:#16a34a
 ```
 
 ### Universal Resolver
@@ -266,25 +260,16 @@ DIDs enable Verifiable Credentials (VCs) — digital credentials that:
 
 ### Credential Flow
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                  Verifiable Credential Flow                     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Issuer                    Holder                  Verifier    │
-│   (University)              (You)                   (Employer)  │
-│       │                        │                        │       │
-│       │  1. Issue credential   │                        │       │
-│       │───────────────────────►│                        │       │
-│       │                        │                        │       │
-│       │                        │  2. Present credential │       │
-│       │                        │───────────────────────►│       │
-│       │                        │                        │       │
-│       │                        │  3. Verify signature   │       │
-│       │◄────────────────────────────────────────────────│       │
-│       │         (resolve issuer DID, check sig)         │       │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant Issuer as 🏛️ Issuer<br/>(University)
+    participant Holder as 👤 Holder<br/>(You)
+    participant Verifier as 🏢 Verifier<br/>(Employer)
+
+    Issuer->>Holder: 1. Issue credential
+    Holder->>Verifier: 2. Present credential
+    Verifier->>Issuer: 3. Verify signature
+    Note over Verifier,Issuer: Resolve issuer DID, check signature
 ```
 
 ### Credential Revocation
@@ -309,24 +294,20 @@ DIDs integrate across the stack:
 
 ### Cross-Protocol Identity
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Unified Identity                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│                    did:web:alice.me                             │
-│                           │                                     │
-│         ┌─────────────────┼─────────────────┐                  │
-│         │                 │                 │                   │
-│         ▼                 ▼                 ▼                   │
-│   ┌──────────┐     ┌──────────┐     ┌──────────┐              │
-│   │  Solid   │     │  Nostr   │     │ ActivityPub│             │
-│   │   Pod    │     │  npub    │     │  Actor   │              │
-│   └──────────┘     └──────────┘     └──────────┘              │
-│                                                                 │
-│   All linked via service endpoints in DID Document             │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    DID["🔑 did:web:alice.me"]
+
+    DID --> Solid["📦 Solid Pod"]
+    DID --> Nostr["⚡ Nostr npub"]
+    DID --> AP["🌐 ActivityPub Actor"]
+
+    Note["All linked via service endpoints in DID Document"]
+
+    style DID fill:#dcfce7,stroke:#16a34a
+    style Solid fill:#dbeafe,stroke:#2563eb
+    style Nostr fill:#fef3c7,stroke:#d97706
+    style AP fill:#f3e8ff,stroke:#9333ea
 ```
 
 ## Implementations
