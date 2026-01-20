@@ -94,6 +94,9 @@ const sidebars: SidebarsConfig = {
             'projects/nostr-components/index',
             'projects/ndk/index',
             'projects/mashlib/index',
+            'projects/automerge/index',
+            'projects/yjs/index',
+            'projects/remotestorage/index',
           ],
         },
         {
