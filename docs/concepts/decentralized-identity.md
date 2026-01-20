@@ -12,30 +12,28 @@ description: Own your identity, prove who you are
 
 Today, your online identity is fragmented and dependent:
 
+```mermaid
+flowchart BT
+    subgraph problem["❌ Fragmented Identity"]
+        Alice((Alice))
+        T["Twitter<br/><small>@alice</small>"]
+        G["Google<br/><small>alice@gmail</small>"]
+        F["Facebook<br/><small>alice.fb</small>"]
+        B["Bank<br/><small>acct#123</small>"]
+        T --> Alice
+        G --> Alice
+        F --> Alice
+        B --> Alice
+    end
+    style problem fill:#fee2e2,stroke:#dc2626
+    style Alice fill:#fef3c7,stroke:#d97706
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    CENTRALIZED IDENTITY                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐              │
-│   │ Twitter │  │  Google │  │ Facebook│  │  Bank   │              │
-│   │ @alice  │  │ alice@  │  │ alice.fb│  │ acct#123│              │
-│   └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘              │
-│        │            │            │            │                    │
-│        └────────────┴─────┬──────┴────────────┘                    │
-│                           │                                        │
-│                      ┌────┴────┐                                   │
-│                      │  Alice  │                                   │
-│                      └─────────┘                                   │
-│                                                                     │
-│   Problems:                                                        │
-│   • Different identity on each service                             │
-│   • Platforms can terminate accounts                               │
-│   • No way to prove these are the same person                      │
-│   • Reputation and history locked in silos                         │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+
+**Problems:**
+- Different identity on each service
+- Platforms can terminate accounts
+- No way to prove these are the same person
+- Reputation and history locked in silos
 
 | Problem | Impact |
 |---------|--------|
@@ -59,59 +57,59 @@ A DID is an identifier that:
 
 ### DID Syntax
 
+```mermaid
+flowchart LR
+    subgraph structure["DID Structure"]
+        direction LR
+        Scheme["did"] --- Method["nostr"] --- ID["npub1abc123..."]
+    end
+
+    Scheme -.- S_note["Scheme<br/><small>always 'did'</small>"]
+    Method -.- M_note["Method<br/><small>how to resolve</small>"]
+    ID -.- ID_note["Identifier<br/><small>method-specific</small>"]
+
+    style structure fill:#dbeafe,stroke:#2563eb
+    style S_note fill:#f8fafc,stroke:#94a3b8
+    style M_note fill:#f8fafc,stroke:#94a3b8
+    style ID_note fill:#f8fafc,stroke:#94a3b8
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    DID STRUCTURE                                    │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│     did : nostr : npub1abc123...                                   │
-│      │      │           │                                          │
-│      │      │           └── Method-specific identifier             │
-│      │      └── Method (how to resolve)                            │
-│      └── Scheme (always "did")                                     │
-│                                                                     │
-│   Examples:                                                         │
-│   did:nostr:npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkxl8lt       │
-│   did:web:alice.example.com                                        │
-│   did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK         │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+
+**Examples:**
+- `did:nostr:npub1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkxl8lt`
+- `did:web:alice.example.com`
+- `did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK`
 
 ## How DIDs Work
 
+```mermaid
+flowchart TB
+    DID["🔑 did:nostr:npub1abc123..."]
+    DID -->|"resolve"| Doc["📄 DID Document"]
+    Doc -->|"extract"| Key["🔐 Public Key"]
+    Key -->|"verify"| Sig["✅ Signatures"]
+
+    style DID fill:#dbeafe,stroke:#2563eb
+    style Doc fill:#fef3c7,stroke:#d97706
+    style Key fill:#f3e8ff,stroke:#9333ea
+    style Sig fill:#dcfce7,stroke:#16a34a
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    DID RESOLUTION                                   │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   1. Start with a DID                                              │
-│   ┌─────────────────────────────────────────────────────────────┐  │
-│   │           did:nostr:npub1abc123...                           │  │
-│   └─────────────────────────────────────────────────────────────┘  │
-│                              │                                     │
-│                              │ resolve                             │
-│                              ▼                                     │
-│   2. Get DID Document                                              │
-│   ┌─────────────────────────────────────────────────────────────┐  │
-│   │  {                                                           │  │
-│   │    "@context": "https://www.w3.org/ns/did/v1",               │  │
-│   │    "id": "did:nostr:npub1abc123...",                         │  │
-│   │    "verificationMethod": [{                                  │  │
-│   │      "type": "SchnorrSecp256k1",                             │  │
-│   │      "publicKeyHex": "abc123..."                             │  │
-│   │    }],                                                       │  │
-│   │    "authentication": ["#key-0"],                             │  │
-│   │    "service": [{                                             │  │
-│   │      "type": "SolidStorage",                                 │  │
-│   │      "serviceEndpoint": "https://pod.example/"               │  │
-│   │    }]                                                        │  │
-│   │  }                                                           │  │
-│   └─────────────────────────────────────────────────────────────┘  │
-│                                                                     │
-│   3. Use the public key to verify signatures                       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+
+**DID Document contains:**
+
+```json
+{
+  "@context": "https://www.w3.org/ns/did/v1",
+  "id": "did:nostr:npub1abc123...",
+  "verificationMethod": [{
+    "type": "SchnorrSecp256k1",
+    "publicKeyHex": "abc123..."
+  }],
+  "authentication": ["#key-0"],
+  "service": [{
+    "type": "SolidStorage",
+    "serviceEndpoint": "https://pod.example/"
+  }]
+}
 ```
 
 The DID Document contains:
@@ -190,31 +188,22 @@ did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
 
 How you prove identity with DIDs:
 
+```mermaid
+sequenceDiagram
+    participant Service
+    participant User
+    participant Wallet as 🔐 Wallet
+
+    Service->>User: 1. Present challenge
+    User->>Wallet: 2. Sign challenge
+    Wallet->>Wallet: Use private key
+    Wallet->>Service: 3. Return signature
+    Service->>Service: 4. Resolve DID → Get public key
+    Service->>Service: 5. Verify signature
+    Service->>User: ✅ Access granted
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    DID AUTHENTICATION                               │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   1. Service presents a challenge                                  │
-│   ┌─────────────┐      challenge      ┌─────────────┐              │
-│   │   Service   │ ──────────────────► │    User     │              │
-│   └─────────────┘                     └─────────────┘              │
-│                                             │                      │
-│   2. User signs with private key            │ sign                 │
-│                                             ▼                      │
-│   3. Service verifies with public key ┌─────────────┐              │
-│   ┌─────────────┐     signature      │   Wallet    │              │
-│   │   Service   │ ◄────────────────── │  (keys)     │              │
-│   └─────────────┘                     └─────────────┘              │
-│         │                                                          │
-│         │ resolve DID → get public key → verify                    │
-│         ▼                                                          │
-│   4. Access granted                                                │
-│                                                                     │
-│   No password. No OAuth. Just cryptography.                        │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+
+**No password. No OAuth. Just cryptography.**
 
 ## Verifiable Credentials
 
@@ -229,41 +218,23 @@ DIDs enable **Verifiable Credentials** — digital credentials that are:
 
 ### Credential Flow
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    VERIFIABLE CREDENTIAL FLOW                       │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   1. Issuer creates credential                                     │
-│   ┌──────────────┐                                                 │
-│   │  University  │ ─── issues ───► Diploma Credential              │
-│   │   (issuer)   │                  signed by university           │
-│   └──────────────┘                                                 │
-│                                                                     │
-│   2. Holder stores credential                                      │
-│   ┌──────────────┐                                                 │
-│   │    Alice     │ ─── stores ───► Wallet / Pod                    │
-│   │   (holder)   │                                                 │
-│   └──────────────┘                                                 │
-│                                                                     │
-│   3. Verifier requests proof                                       │
-│   ┌──────────────┐      request      ┌──────────────┐              │
-│   │   Employer   │ ────────────────► │    Alice     │              │
-│   │  (verifier)  │                   └──────────────┘              │
-│   └──────────────┘                          │                      │
-│          ▲                                  │ presents             │
-│          │         proof (VP)               │ credential           │
-│          └──────────────────────────────────┘                      │
-│                                                                     │
-│   4. Verifier validates                                            │
-│      • Credential signed by university? ✓                          │
-│      • University's DID is valid? ✓                               │
-│      • Credential not revoked? ✓                                   │
-│      • Presented by the subject? ✓                                │
-│                                                                     │
-│   No need to contact university!                                   │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant University as 🎓 University
+    participant Alice as 👤 Alice
+    participant Wallet as 📱 Wallet
+    participant Employer as 🏢 Employer
+
+    University->>Alice: 1. Issue diploma credential
+    Alice->>Wallet: 2. Store in wallet
+    Employer->>Alice: 3. Request proof of degree
+    Alice->>Wallet: 4. Select credential
+    Wallet->>Employer: 5. Present verifiable proof
+    Note over Employer: Verify without contacting university
+    Employer->>Employer: ✓ Signed by university?
+    Employer->>Employer: ✓ University DID valid?
+    Employer->>Employer: ✓ Not revoked?
+    Employer->>Alice: ✅ Verified!
 ```
 
 ### Credential Types
@@ -309,29 +280,22 @@ Your keys are critical:
 
 ## Integration with SAND
 
+```mermaid
+flowchart TB
+    DID["🔑 Your DID<br/><small>did:nostr:npub1...</small>"]
+    DID --> Solid["📦 Solid Pod<br/><small>WebID profile</small>"]
+    DID --> Nostr["⚡ Nostr<br/><small>Sign events</small>"]
+    DID --> AP["🌐 ActivityPub<br/><small>Actor identity</small>"]
+    DID --> Apps["📱 Apps<br/><small>Login with DID</small>"]
+
+    style DID fill:#dbeafe,stroke:#2563eb
+    style Solid fill:#dcfce7,stroke:#16a34a
+    style Nostr fill:#fef3c7,stroke:#d97706
+    style AP fill:#f3e8ff,stroke:#9333ea
+    style Apps fill:#f1f5f9,stroke:#64748b
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    DID in SAND STACK                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   ┌─────────────────────────────────────────────────────────────┐  │
-│   │                    Your DID                                  │  │
-│   │              did:nostr:npub1...                              │  │
-│   └─────────────────────────────────────────────────────────────┘  │
-│         │              │              │              │             │
-│         ▼              ▼              ▼              ▼             │
-│   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
-│   │  Solid   │  │  Nostr   │  │ActivityPub│  │   Apps   │         │
-│   │   Pod    │  │  Relays  │  │  Servers │  │          │         │
-│   │          │  │          │  │          │  │          │         │
-│   │ WebID    │  │ Sign     │  │ Actor    │  │ Login    │         │
-│   │ profile  │  │ events   │  │ identity │  │ with DID │         │
-│   └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
-│                                                                     │
-│   One identity → All protocols → All services                      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+
+**One identity → All protocols → All services**
 
 ## Getting Started
 

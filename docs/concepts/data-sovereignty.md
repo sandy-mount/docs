@@ -12,29 +12,26 @@ description: Your data belongs to you
 
 Today, your data is scattered across hundreds of services:
 
+```mermaid
+flowchart LR
+    subgraph problem["❌ Your Data Today"]
+        You((You))
+        You --> IG["📷 Instagram<br/><small>they own your photos</small>"]
+        You --> GD["📄 Google Drive<br/><small>they own your docs</small>"]
+        You --> WA["💬 WhatsApp<br/><small>they own your messages</small>"]
+        You --> LI["💼 LinkedIn<br/><small>they own your network</small>"]
+        You --> SP["🎵 Spotify<br/><small>they own your playlists</small>"]
+    end
+
+    style problem fill:#fee2e2,stroke:#dc2626
+    style You fill:#fef3c7,stroke:#d97706
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Your Data Today                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   You                                                           │
-│    │                                                            │
-│    ├──► Instagram: photos (they own copy)                      │
-│    ├──► Google Drive: documents (they own copy)                │
-│    ├──► WhatsApp: messages (they own copy)                     │
-│    ├──► LinkedIn: professional network (they own copy)         │
-│    ├──► Spotify: playlists (they own copy)                     │
-│    ├──► Twitter/X: tweets (they own copy)                      │
-│    └──► ...hundreds more services                              │
-│                                                                 │
-│   Problems:                                                     │
-│   • Each service has different terms you didn't read           │
-│   • Each can change rules, lock you out, or shut down          │
-│   • Data used to train AI, serve ads, profile you              │
-│   • Switching means losing everything                          │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+**Problems:**
+- Each service has different terms you didn't read
+- Each can change rules, lock you out, or shut down
+- Data used to train AI, serve ads, profile you
+- Switching means losing everything
 
 You're a tenant in someone else's building.
 
@@ -42,28 +39,29 @@ You're a tenant in someone else's building.
 
 Data sovereignty inverts this model:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Your Data Tomorrow                           │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Your Data Store (Pod)                                        │
-│    │                                                            │
-│    ├── photos/                                                 │
-│    ├── documents/                                              │
-│    ├── messages/                                               │
-│    ├── social/                                                 │
-│    └── preferences/                                            │
-│         │                                                       │
-│         ▼                                                       │
-│   ┌─────────────────────────────────────────────────────┐      │
-│   │  Apps request access (you approve)                   │      │
-│   │  ├── Photo app → photos/ (read)                     │      │
-│   │  ├── Doc editor → documents/ (read/write)           │      │
-│   │  └── AI agent → all (read, with your permission)    │      │
-│   └─────────────────────────────────────────────────────┘      │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph solution["✅ Your Data Tomorrow"]
+        Pod["📦 Your Pod"]
+        Photos["📷 photos/"]
+        Docs["📄 documents/"]
+        Messages["💬 messages/"]
+        Social["👥 social/"]
+
+        Pod --> Photos
+        Pod --> Docs
+        Pod --> Messages
+        Pod --> Social
+
+        Photos --> PhotoApp["Photo App<br/><small>read access</small>"]
+        Docs --> DocEditor["Doc Editor<br/><small>read/write</small>"]
+        Messages --> Agent["🤖 AI Agent<br/><small>with permission</small>"]
+        Social --> Agent
+    end
+
+    style solution fill:#dcfce7,stroke:#16a34a
+    style Pod fill:#dbeafe,stroke:#2563eb
+    style Agent fill:#f3e8ff,stroke:#9333ea
 ```
 
 ### Core Principles

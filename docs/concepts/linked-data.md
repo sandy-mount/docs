@@ -12,30 +12,31 @@ description: Data that connects to data
 
 Traditional databases store data in tables with arbitrary IDs. Linked Data uses URLs:
 
+<div className="grid-2col">
+
+```mermaid
+flowchart TB
+    subgraph trad["❌ Traditional Database"]
+        T1["id: 42<br/>name: Alice<br/>knows: 17"]
+        T2["id: 17<br/>name: Bob"]
+        T1 -.->|"opaque ID"| T2
+    end
+    Note1["Locked in one database"]
+    style trad fill:#fee2e2,stroke:#dc2626
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    TRADITIONAL vs LINKED DATA                       │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Traditional Database                                              │
-│   ┌────────────────────────────────────┐                           │
-│   │ id │ name    │ knows │             │                           │
-│   ├────┼─────────┼───────┤             │                           │
-│   │ 42 │ "Alice" │ 17    │  ← opaque   │                           │
-│   │ 17 │ "Bob"   │ NULL  │    IDs      │                           │
-│   └────┴─────────┴───────┘             │                           │
-│   Locked in one database                                           │
-│                                                                     │
-│   Linked Data                                                       │
-│   ┌─────────────────────────────────────────────────────────────┐  │
-│   │ @id: "https://alice.example/profile#me"                      │  │
-│   │ name: "Alice"                                                │  │
-│   │ knows: "https://bob.example/profile#me"  ← resolvable URL   │  │
-│   └─────────────────────────────────────────────────────────────┘  │
-│   Data connects across the web                                     │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+
+```mermaid
+flowchart TB
+    subgraph linked["✅ Linked Data"]
+        L1["@id: alice.example#me<br/>name: Alice"]
+        L2["@id: bob.example#me<br/>name: Bob"]
+        L1 -->|"knows (URL)"| L2
+    end
+    Note2["Data connects across the web"]
+    style linked fill:#dcfce7,stroke:#16a34a
 ```
+
+</div>
 
 Now Alice's profile can link to Bob's profile, even though they're on different servers. Data connects to data.
 
@@ -54,28 +55,22 @@ Tim Berners-Lee defined four rules for Linked Data:
 
 Linked Data uses RDF (Resource Description Framework). Everything is a **triple**:
 
+```mermaid
+flowchart LR
+    Subject["📍 Subject<br/><small>alice.example#me</small>"]
+    Subject -->|"Predicate<br/><small>foaf:name</small>"| Object["📝 Object<br/><small>'Alice'</small>"]
+
+    style Subject fill:#dbeafe,stroke:#2563eb
+    style Object fill:#dcfce7,stroke:#16a34a
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    RDF TRIPLE                                       │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Subject ─────► Predicate ─────► Object                           │
-│                                                                     │
-│   "What"        "What about it"   "The value"                      │
-│                                                                     │
-│   Example:                                                          │
-│   ┌──────────────────────┐                                         │
-│   │ alice.example#me     │  ← Subject (who/what)                   │
-│   │         │            │                                         │
-│   │   foaf:name          │  ← Predicate (property)                 │
-│   │         │            │                                         │
-│   │      "Alice"         │  ← Object (value)                       │
-│   └──────────────────────┘                                         │
-│                                                                     │
-│   "Alice's name is 'Alice'"                                        │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+
+| Part | Description | Example |
+|------|-------------|---------|
+| **Subject** | What we're describing | `alice.example#me` |
+| **Predicate** | The property | `foaf:name` |
+| **Object** | The value | `"Alice"` |
+
+This triple says: *"Alice's name is 'Alice'"*
 
 ### Triple Examples
 
@@ -111,31 +106,32 @@ Linked Data uses RDF (Resource Description Framework). Everything is a **triple*
 
 ### The Web of Data
 
+```mermaid
+flowchart TB
+    subgraph AlicePod["📦 Alice's Pod"]
+        AliceProfile["profile#me"]
+        AlicePost["post1"]
+    end
+
+    subgraph BobPod["📦 Bob's Pod"]
+        BobProfile["profile#me"]
+        BobPost["post1"]
+    end
+
+    subgraph External["🌐 External Data"]
+        Acme["Acme Corp<br/><small>Wikidata / Company site</small>"]
+    end
+
+    AliceProfile -->|"knows"| BobProfile
+    AlicePost -->|"likes"| BobPost
+    AliceProfile -->|"worksAt"| Acme
+
+    style AlicePod fill:#dbeafe,stroke:#2563eb
+    style BobPod fill:#dcfce7,stroke:#16a34a
+    style External fill:#fef3c7,stroke:#d97706
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    WEB OF DATA                                      │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Alice's Pod                       Bob's Pod                       │
-│   ┌───────────────┐                ┌───────────────┐               │
-│   │ profile#me    │ ─── knows ───► │ profile#me    │               │
-│   │               │                │               │               │
-│   │ post1         │                │ post1 ◄──────┐│               │
-│   │   │           │                │               ││               │
-│   │   └──likes────┼────────────────┼───────────────┘│               │
-│   └───────────────┘                └───────────────┘               │
-│          │                                                          │
-│          │ worksAt                                                  │
-│          ▼                                                          │
-│   ┌───────────────┐                                                │
-│   │ Acme Corp     │ (Wikidata, company website, etc.)              │
-│   │ Organization  │                                                │
-│   └───────────────┘                                                │
-│                                                                     │
-│   Data links across pods, websites, public datasets                │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+
+Data links across pods, websites, and public datasets.
 
 ## Vocabularies
 

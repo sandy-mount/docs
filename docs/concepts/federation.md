@@ -16,28 +16,45 @@ The opposite is a silo: Facebook messages only go to Facebook. Twitter posts sta
 
 Federation creates networks without central control:
 
+<div className="grid-2col">
+
+```mermaid
+flowchart TB
+    subgraph central["❌ Centralized"]
+        Corp["🏢 Corporation"]
+        U1((User))
+        U2((User))
+        U3((User))
+        U1 --> Corp
+        U2 --> Corp
+        U3 --> Corp
+    end
+    style central fill:#fee2e2,stroke:#dc2626
+    style Corp fill:#fecaca,stroke:#dc2626
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    FEDERATED vs CENTRALIZED                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   CENTRALIZED (Silos)          FEDERATED (Open Networks)           │
-│                                                                     │
-│        ┌───────┐                    ┌───┐   ┌───┐                  │
-│        │       │                    │ A │───│ B │                  │
-│   ┌────│ Corp  │────┐               └─┬─┘   └─┬─┘                  │
-│   │    │       │    │                 │       │                    │
-│   │    └───────┘    │                 │       │                    │
-│   │                 │               ┌─┴─┐   ┌─┴─┐                  │
-│  Users          Users               │ C │───│ D │                  │
-│  (trapped)      (trapped)           └───┘   └───┘                  │
-│                                                                     │
-│   One point of failure           No single point of failure        │
-│   One set of rules               Many communities, one protocol    │
-│   Company owns data              Users own data                    │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+
+```mermaid
+flowchart TB
+    subgraph fed["✅ Federated"]
+        A["Server A"] <--> B["Server B"]
+        A <--> C["Server C"]
+        B <--> D["Server D"]
+        C <--> D
+    end
+    style fed fill:#dcfce7,stroke:#16a34a
+    style A fill:#bbf7d0,stroke:#16a34a
+    style B fill:#bbf7d0,stroke:#16a34a
+    style C fill:#bbf7d0,stroke:#16a34a
+    style D fill:#bbf7d0,stroke:#16a34a
 ```
+
+</div>
+
+| Centralized | Federated |
+|-------------|-----------|
+| One point of failure | No single point of failure |
+| One set of rules | Many communities, one protocol |
+| Company owns data | Users own data |
 
 Alice can follow Bob and Carol even though they're on different servers.
 
@@ -57,48 +74,53 @@ Alice can follow Bob and Carol even though they're on different servers.
 
 Different protocols approach federation differently:
 
+### Push Model (ActivityPub)
+
+Server A creates content and pushes to followers' servers. Each server stores a copy.
+
+```mermaid
+flowchart LR
+    subgraph push["Push Model"]
+        SA["Server A"] -->|"push"| SB["Server B"]
+        SA -->|"push"| SC["Server C"]
+        SA -->|"push"| SD["Server D"]
+    end
+    style push fill:#dbeafe,stroke:#2563eb
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      FEDERATION MODELS                              │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   PUSH Model (ActivityPub)                                         │
-│   ─────────────────────────                                        │
-│   Server A creates content → Pushes to Server B, C, D              │
-│   Each server stores a copy                                        │
-│   Discovery: WebFinger (@user@server.com)                          │
-│                                                                     │
-│   ┌─────┐      push       ┌─────┐                                  │
-│   │  A  │ ──────────────► │  B  │                                  │
-│   └─────┘                 └─────┘                                  │
-│       │                      ▲                                     │
-│       │                      │                                     │
-│       │      push            │                                     │
-│       └──────────────────────┘                                     │
-│                                                                     │
-│   PULL Model (Nostr)                                               │
-│   ──────────────────                                               │
-│   User publishes to relays ← Followers pull from relays            │
-│   Relays are dumb storage                                          │
-│   Discovery: NIP-05 (user@example.com → pubkey)                    │
-│                                                                     │
-│   ┌─────┐                 ┌─────┐                                  │
-│   │User │ ──► Relay A ◄── │User │                                  │
-│   └─────┘     Relay B     └─────┘                                  │
-│               Relay C                                              │
-│                                                                     │
-│   HYBRID Model (Solid)                                             │
-│   ────────────────────                                             │
-│   Pods store user data, apps fetch on demand                       │
-│   ACL controls access                                              │
-│   Discovery: WebID, Type Indexes                                   │
-│                                                                     │
-│   ┌─────┐     request     ┌─────┐                                  │
-│   │ App │ ◄─────────────► │ Pod │                                  │
-│   └─────┘     response    └─────┘                                  │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+
+**Discovery:** WebFinger (`@user@server.com`)
+
+### Pull Model (Nostr)
+
+Users publish to relays, followers pull from any relay that has the content.
+
+```mermaid
+flowchart TB
+    subgraph pull["Pull Model"]
+        U1["User A"] -->|"publish"| R1["⚡ Relay 1"]
+        U1 -->|"publish"| R2["⚡ Relay 2"]
+        R1 -->|"pull"| U2["User B"]
+        R2 -->|"pull"| U2
+    end
+    style pull fill:#fef3c7,stroke:#d97706
 ```
+
+**Discovery:** NIP-05 (`user@example.com` → pubkey)
+
+### Hybrid Model (Solid)
+
+Pods store user data, apps fetch on demand with access control.
+
+```mermaid
+flowchart LR
+    subgraph hybrid["Hybrid Model"]
+        App["📱 App"] <-->|"request/response"| Pod["📦 Pod"]
+        Pod <-->|"linked data"| Pod2["📦 Other Pod"]
+    end
+    style hybrid fill:#f3e8ff,stroke:#9333ea
+```
+
+**Discovery:** WebID, Type Indexes
 
 ## Federation in SAND
 
@@ -163,31 +185,11 @@ This creates a marketplace of communities with different norms, while still allo
 
 ### Moderation Patterns
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    MODERATION IN FEDERATION                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   ActivityPub                                                       │
-│   ├── Server blocks (defederation)                                 │
-│   ├── User blocks/mutes                                            │
-│   ├── Content warnings                                             │
-│   └── Instance allowlists/blocklists                               │
-│                                                                     │
-│   Nostr                                                             │
-│   ├── Relay policy (paid, whitelist, topic-based)                  │
-│   ├── Client-side filtering                                        │
-│   ├── Mute lists (NIP-51)                                          │
-│   ├── Web of Trust (derived from follows)                          │
-│   └── Content labels (NIP-32)                                      │
-│                                                                     │
-│   Solid                                                             │
-│   ├── Pod-level access control (WAC/ACP)                           │
-│   ├── User grants/revokes access                                   │
-│   └── App-level filtering                                          │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Protocol | Moderation Tools |
+|----------|------------------|
+| **ActivityPub** | Server blocks (defederation), user blocks/mutes, content warnings, allowlists/blocklists |
+| **Nostr** | Relay policies, client-side filtering, mute lists (NIP-51), Web of Trust, content labels (NIP-32) |
+| **Solid** | Pod-level access control (WAC/ACP), user grants/revokes, app-level filtering |
 
 ## Trade-offs
 
@@ -205,31 +207,11 @@ Federation adds complexity:
 
 Who pays for the infrastructure?
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    FEDERATION ECONOMICS                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   ActivityPub Servers                                               │
-│   ├── Donations (common)                                           │
-│   ├── Hosting fees ($5-20/month)                                   │
-│   ├── Volunteer operators                                          │
-│   └── Some paid instances                                          │
-│                                                                     │
-│   Nostr Relays                                                      │
-│   ├── Free public relays (often limited)                           │
-│   ├── Paid relays ($5-50/year)                                     │
-│   ├── Private relays (run your own)                                │
-│   └── Specialized relays (media, search, archive)                  │
-│                                                                     │
-│   Solid Pods                                                        │
-│   ├── Free tier (limited storage)                                  │
-│   ├── Paid hosting (varies)                                        │
-│   ├── Self-hosted (your hardware)                                  │
-│   └── Enterprise offerings                                         │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Protocol | Funding Models |
+|----------|----------------|
+| **ActivityPub** | Donations, hosting fees ($5-20/mo), volunteer operators, some paid instances |
+| **Nostr** | Free public relays, paid relays ($5-50/year), self-hosted, specialized relays |
+| **Solid** | Free tiers, paid hosting, self-hosted, enterprise offerings |
 
 ## Bridging Federated Networks
 
@@ -243,30 +225,22 @@ Different federated networks can be connected:
 
 ## Real-World Example
 
-How a message travels in federation:
+How a message travels in ActivityPub federation:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│          ActivityPub: Alice (server.a) → Bob (server.b)            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   1. Alice posts on server.a                                       │
-│   2. server.a looks up Bob's inbox via WebFinger                   │
-│   3. server.a signs the Activity with HTTP Signature               │
-│   4. server.a POSTs to server.b/inbox                              │
-│   5. server.b verifies signature                                   │
-│   6. server.b stores the post                                      │
-│   7. Bob sees Alice's post in their timeline                       │
-│                                                                     │
-│   Alice                                                             │
-│     │                                                              │
-│     ▼                                                              │
-│   server.a ──HTTP POST + Signature──► server.b                     │
-│                                           │                        │
-│                                           ▼                        │
-│                                          Bob                       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant Alice
+    participant ServerA as server.a
+    participant ServerB as server.b
+    participant Bob
+
+    Alice->>ServerA: 1. Posts content
+    ServerA->>ServerA: 2. Looks up Bob via WebFinger
+    ServerA->>ServerA: 3. Signs with HTTP Signature
+    ServerA->>ServerB: 4. POST to /inbox
+    ServerB->>ServerB: 5. Verifies signature
+    ServerB->>ServerB: 6. Stores the post
+    ServerB->>Bob: 7. Shows in timeline
 ```
 
 ## Learn More

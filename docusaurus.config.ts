@@ -11,6 +11,11 @@ const config: Config = {
     v4: true,
   },
 
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
   url: 'https://sandy-mount.github.io',
   baseUrl: '/docs/',
   organizationName: 'sandy-mount',

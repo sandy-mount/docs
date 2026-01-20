@@ -112,3 +112,27 @@ html {
 .sand-a { color: #2563EB; }
 .sand-n { color: #F59E0B; }
 .sand-d { color: #10B981; }
+
+/* Grid layouts for side-by-side diagrams */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+@media (max-width: 768px) {
+  .grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mermaid diagram styling */
+.mermaid {
+  margin: 1rem 0;
+}
+
+/* Ensure mermaid diagrams have proper background in dark mode */
+[data-theme='dark'] .mermaid {
+  background: transparent;
+}

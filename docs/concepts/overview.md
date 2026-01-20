@@ -12,47 +12,60 @@ The SAND stack is built on foundational ideas that distinguish it from the centr
 
 The current web has a problem:
 
+```mermaid
+flowchart TB
+    subgraph web2["❌ Web 2.0: The Problem"]
+        You((You))
+        You --> A["Platform A<br/><small>owns your photos</small>"]
+        You --> B["Platform B<br/><small>owns your documents</small>"]
+        You --> C["Platform C<br/><small>owns your messages</small>"]
+        You --> D["Platform D<br/><small>owns your social graph</small>"]
+    end
+
+    style web2 fill:#fee2e2,stroke:#dc2626
+    style You fill:#fef3c7,stroke:#d97706
+    style A fill:#fff,stroke:#9ca3af
+    style B fill:#fff,stroke:#9ca3af
+    style C fill:#fff,stroke:#9ca3af
+    style D fill:#fff,stroke:#9ca3af
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Web 2.0 Architecture                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   You ──► Platform A ──► Your data (they own it)               │
-│       ──► Platform B ──► Your data (they own it)               │
-│       ──► Platform C ──► Your data (they own it)               │
-│                                                                 │
-│   Problems:                                                     │
-│   • Data scattered across platforms you don't control          │
-│   • Identity tied to each platform separately                  │
-│   • Platforms can ban you, change terms, or shut down          │
-│   • Your data trains their AI, serves their ads                │
-│   • No portability — leaving means losing everything           │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+**Problems:**
+- Data scattered across platforms you don't control
+- Identity tied to each platform separately
+- Platforms can ban you, change terms, or shut down
+- Your data trains their AI, serves their ads
+- No portability — leaving means losing everything
 
 The decentralized web inverts this:
 
+```mermaid
+flowchart TB
+    subgraph sand["✅ SAND: The Solution"]
+        ID["🔑 Your Identity<br/><small>DID / WebID</small>"]
+        Data["📦 Your Data<br/><small>Pod / Events</small>"]
+        ID --> Data
+        Data --> AppA["App A<br/><small>reads</small>"]
+        Data --> AppB["App B<br/><small>reads</small>"]
+        Data --> AppC["App C<br/><small>reads</small>"]
+        Data --> Agent["🤖 Your Agent<br/><small>acts for you</small>"]
+    end
+
+    style sand fill:#dcfce7,stroke:#16a34a
+    style ID fill:#dbeafe,stroke:#2563eb
+    style Data fill:#fef3c7,stroke:#d97706
+    style AppA fill:#fff,stroke:#9ca3af
+    style AppB fill:#fff,stroke:#9ca3af
+    style AppC fill:#fff,stroke:#9ca3af
+    style Agent fill:#f3e8ff,stroke:#9333ea
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    SAND Architecture                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   Your Identity (DID) ──► Your Data (Pod/Events)               │
-│         │                        │                              │
-│         ▼                        ▼                              │
-│   App A reads ◄─────────► App B reads                          │
-│   App C reads ◄─────────► App D reads                          │
-│                                                                 │
-│   Benefits:                                                     │
-│   • One identity, portable everywhere                          │
-│   • Data in one place you control                              │
-│   • Apps request access, you grant it                          │
-│   • Switch apps without losing anything                        │
-│   • Your AI agents work for you                                │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+**Benefits:**
+- One identity, portable everywhere
+- Data in one place you control
+- Apps request access, you grant it
+- Switch apps without losing anything
+- Your AI agents work for you
 
 ## The Core Ideas
 
@@ -73,20 +86,41 @@ Your data belongs to you. Not to platforms, not to advertisers, not to algorithm
 
 Instead of one giant server controlled by one company, federated systems connect many servers run by many people.
 
-```
-Centralized (Twitter):       Federated (Mastodon):
+<div className="grid-2col">
 
-    ┌───────────┐               ┌───┐   ┌───┐
-    │  Twitter  │               │ A │◄─►│ B │
-    │  Server   │               └───┘   └───┘
-    └───────────┘                 ▲       ▲
-         ▲                        │       │
-    ┌────┴────┐                   ▼       ▼
- All users here               ┌───┐   ┌───┐
-                              │ C │◄─►│ D │
-                              └───┘   └───┘
-                            Users distributed
+```mermaid
+flowchart TB
+    subgraph central["Centralized"]
+        Server["🏢 Single Server"]
+        U1((User))
+        U2((User))
+        U3((User))
+        U4((User))
+        U1 --> Server
+        U2 --> Server
+        U3 --> Server
+        U4 --> Server
+    end
+    style central fill:#fee2e2,stroke:#dc2626
+    style Server fill:#fecaca,stroke:#dc2626
 ```
+
+```mermaid
+flowchart TB
+    subgraph fed["Federated"]
+        A["Server A"] <--> B["Server B"]
+        A <--> C["Server C"]
+        B <--> D["Server D"]
+        C <--> D
+    end
+    style fed fill:#dcfce7,stroke:#16a34a
+    style A fill:#bbf7d0,stroke:#16a34a
+    style B fill:#bbf7d0,stroke:#16a34a
+    style C fill:#bbf7d0,stroke:#16a34a
+    style D fill:#bbf7d0,stroke:#16a34a
+```
+
+</div>
 
 **Why it matters:** No single point of failure. No single entity can censor everyone. You can move to another server and keep your connections.
 
@@ -110,20 +144,26 @@ Your identity shouldn't depend on any single company. DIDs let you prove who you
 
 Data that connects to other data. Every piece of information has a URL and can link to other information.
 
-```
-Traditional database:
-┌────────────────────────┐
-│ id: 1                  │
-│ name: "Alice"          │
-│ friend_id: 2           │  ← Just a number, meaningless outside this DB
-└────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph traditional["Traditional Database"]
+        direction TB
+        rec["id: 1<br/>name: Alice<br/>friend_id: 2"]
+        note1["❌ Just a number<br/>meaningless outside this DB"]
+    end
 
-Linked Data:
-┌────────────────────────────────────────────────────┐
-│ @id: "https://alice.me/profile#me"                 │
-│ name: "Alice"                                      │
-│ knows: "https://bob.example/profile#me"            │  ← Global identifier
-└────────────────────────────────────────────────────┘
+    subgraph linked["Linked Data"]
+        direction TB
+        Alice["https://alice.me#me<br/>name: Alice"]
+        Bob["https://bob.example#me<br/>name: Bob"]
+        Alice -->|knows| Bob
+        note2["✅ Global identifiers<br/>links across the web"]
+    end
+
+    style traditional fill:#fee2e2,stroke:#dc2626
+    style linked fill:#dcfce7,stroke:#16a34a
+    style Alice fill:#dbeafe,stroke:#2563eb
+    style Bob fill:#dbeafe,stroke:#2563eb
 ```
 
 **Why it matters:** Data becomes interoperable. Alice's profile can link to Bob's without them being on the same platform.
@@ -148,20 +188,33 @@ Your apps and data work offline. The cloud is optional. Your device is the sourc
 
 AI agents that work for you, not for platforms. Agents that can read your data, act on your behalf, and answer to you.
 
-```
-Web 2.0 AI:                      Agentic Web:
+<div className="grid-2col">
 
-Platform's AI                    Your AI Agent
-     │                                │
-     ▼                                ▼
-Trained on your data            Reads YOUR data
-     │                                │
-     ▼                                ▼
-Serves platform's goals         Serves YOUR goals
-     │                                │
-     ▼                                ▼
-Shows you ads                   Does what you want
+```mermaid
+flowchart TB
+    subgraph web2ai["❌ Platform AI"]
+        P_AI["Platform's AI"]
+        P_Train["Trained on your data"]
+        P_Goals["Serves platform goals"]
+        P_Ads["Shows you ads 📢"]
+        P_AI --> P_Train --> P_Goals --> P_Ads
+    end
+    style web2ai fill:#fee2e2,stroke:#dc2626
 ```
+
+```mermaid
+flowchart TB
+    subgraph agentic["✅ Your Agent"]
+        Y_AI["🤖 Your AI Agent"]
+        Y_Read["Reads YOUR data"]
+        Y_Goals["Serves YOUR goals"]
+        Y_Action["Does what you want ✨"]
+        Y_AI --> Y_Read --> Y_Goals --> Y_Action
+    end
+    style agentic fill:#dcfce7,stroke:#16a34a
+```
+
+</div>
 
 **The shift:** When you control your data, AI agents can work with it on your terms. They can manage your Solid pod, post to Nostr, interact with federated services — all under your direction.
 
@@ -198,24 +251,35 @@ Shows you ads                   Does what you want
 
 ## The Stack Together
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         APPLICATIONS                            │
-│   Social apps, productivity tools, AI agents, games, etc.       │
-├─────────────────────────────────────────────────────────────────┤
-│                          PROTOCOLS                              │
-│                                                                 │
-│   ┌─────────┐  ┌─────────────┐  ┌───────┐  ┌─────────┐        │
-│   │  Solid  │  │ ActivityPub │  │ Nostr │  │   DID   │        │
-│   │         │  │             │  │       │  │         │        │
-│   │ Personal│  │ Federated   │  │ Relay │  │ Identity│        │
-│   │ data    │  │ social      │  │ social│  │ layer   │        │
-│   └─────────┘  └─────────────┘  └───────┘  └─────────┘        │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                        FOUNDATIONS                              │
-│   HTTP, WebSockets, cryptographic signatures, JSON-LD, URIs    │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+block-beta
+    columns 4
+
+    block:apps:4
+        columns 4
+        space:4
+        A1["Social Apps"] A2["Productivity"] A3["AI Agents"] A4["Games"]
+    end
+
+    block:protocols:4
+        columns 4
+        Solid["📦 Solid<br/><small>Personal Data</small>"]
+        AP["🌐 ActivityPub<br/><small>Federated Social</small>"]
+        Nostr["⚡ Nostr<br/><small>Relay Social</small>"]
+        DID["🔑 DID<br/><small>Identity Layer</small>"]
+    end
+
+    block:foundations:4
+        columns 1
+        F["HTTP • WebSockets • Cryptographic Signatures • JSON-LD • URIs"]
+    end
+
+    apps --> protocols
+    protocols --> foundations
+
+    style apps fill:#f3e8ff,stroke:#9333ea
+    style protocols fill:#dbeafe,stroke:#2563eb
+    style foundations fill:#f1f5f9,stroke:#64748b
 ```
 
 Each protocol addresses different needs:
