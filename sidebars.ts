@@ -158,6 +158,9 @@ const sidebars: SidebarsConfig = {
             'projects/openvibe/index',
             'projects/hostr/index',
             'projects/gitstr/index',
+            'projects/voyage/index',
+            'projects/wherostr/index',
+            'projects/camelus/index',
           ],
         },
         {
