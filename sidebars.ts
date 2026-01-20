@@ -77,6 +77,9 @@ const sidebars: SidebarsConfig = {
             'projects/webfinger/index',
             'projects/webid/index',
             'projects/nodeinfo/index',
+            'projects/ldp/index',
+            'projects/wac/index',
+            'projects/acp/index',
           ],
         },
         {
@@ -161,6 +164,7 @@ const sidebars: SidebarsConfig = {
             'projects/voyage/index',
             'projects/wherostr/index',
             'projects/camelus/index',
+            'projects/podspaces/index',
           ],
         },
         {
