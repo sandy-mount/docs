@@ -152,6 +152,12 @@ const sidebars: SidebarsConfig = {
             'projects/pinstr/index',
             'projects/oddbean/index',
             'projects/coop/index',
+            'projects/lume/index',
+            'projects/nostree/index',
+            'projects/nostrcheck/index',
+            'projects/openvibe/index',
+            'projects/hostr/index',
+            'projects/gitstr/index',
           ],
         },
         {
