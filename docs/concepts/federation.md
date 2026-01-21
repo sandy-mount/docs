@@ -222,6 +222,9 @@ Different federated networks can be connected:
 | [Mostr](/projects/mostr) | Nostr ↔ Fediverse | Translates events |
 | [Bridgy Fed](/projects/bridgy-fed) | IndieWeb ↔ Fediverse ↔ Bluesky | Protocol conversion |
 | [Ditto](/projects/ditto) | ActivityPub + Nostr | Dual-protocol server |
+| [Conduit](https://conduit.rs) | Matrix ↔ Fediverse | Matrix server with bridges |
+
+Matrix, while not part of SAND, can bridge to SAND protocols. Servers like Conduit or Synapse support application services that connect Matrix rooms to ActivityPub actors or relay messages to Nostr.
 
 ## Real-World Example
 
@@ -250,3 +253,4 @@ sequenceDiagram
 - [Solid Protocol](/protocols/solid) — Federated data storage
 - [Ditto](/projects/ditto) — Bridge between ActivityPub and Nostr
 - [Mostr](/projects/mostr) — Nostr-Fediverse bridge
+- [Conduit](https://conduit.rs) — Lightweight Matrix server with bridging support
